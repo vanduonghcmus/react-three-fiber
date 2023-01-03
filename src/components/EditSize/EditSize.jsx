@@ -1,10 +1,9 @@
-import { Canvas } from "@react-three/fiber";
+import { Html, PerspectiveCamera } from "@react-three/drei";
+import { Canvas, extend, useThree } from "@react-three/fiber";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { extend } from "@react-three/fiber";
 import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
-import { Html } from "@react-three/drei";
-
+import { ELS } from "../../utils/constanst";
 extend({ TextGeometry });
 
 function Line({ start, end, color }) {
@@ -54,12 +53,26 @@ function LineBox2D({ length, width, position = { x: 0, y: 0 }, color = "" }) {
   );
 }
 
-const EditSize = ({ initialValues }) => {
-  const [box, setBox] = useState(initialValues);
+const Camera = () => {
+  const camera = useRef();
+  const { aspect } = useThree();
+  return (
+    <PerspectiveCamera
+      ref={camera}
+      aspect={aspect}
+      fov={45}
+      position={[0, 0, 200]}
+      makeDefault
+      onUpdate={(self) => self.updateProjectionMatrix()}
+    />
+  );
+};
+
+const EditSize = ({ initialSize }) => {
+  const [box, setBox] = useState(undefined);
 
   function createBoxElements() {
-    const newBox = { ...initialValues };
-
+    const newBox = { params: initialSize, els: ELS };
     let previousPositionX = 0;
     for (let halfIdx = 0; halfIdx < 2; halfIdx++) {
       for (let sideIdx = 0; sideIdx < 2; sideIdx++) {
@@ -69,15 +82,23 @@ const EditSize = ({ initialValues }) => {
         const sideWidth =
           side === "width" ? newBox.params.width : newBox.params.length;
 
-        const flapWidth = sideWidth - 2 * newBox.params.flapGap;
-        const flapHeight =
-          0.5 * newBox.params.width - 0.75 * newBox.params.flapGap;
+        const flapWidth =
+          side === "width" ? sideWidth - 2 * newBox.params.flapGap : sideWidth;
+        const flapHeight = 0.5 * newBox.params.width;
+
+        const flapPosition =
+          side === "width"
+            ? previousPositionX + newBox.params.flapGap
+            : previousPositionX;
 
         const flapBoxTop = (
           <LineBox2D
             width={flapWidth}
             length={flapHeight}
-            position={{ x: previousPositionX, y: newBox.params.depth }}
+            position={{
+              x: flapPosition,
+              y: newBox.params.depth,
+            }}
             color="#FD3F40"
           />
         );
@@ -86,7 +107,7 @@ const EditSize = ({ initialValues }) => {
           <LineBox2D
             width={flapWidth}
             length={flapHeight}
-            position={{ x: previousPositionX, y: -flapHeight }}
+            position={{ x: flapPosition, y: -flapHeight }}
             color="#FD3F40"
           />
         );
@@ -100,8 +121,8 @@ const EditSize = ({ initialValues }) => {
           />
         );
 
-        box.els[half][side].top = flapBoxTop;
-        box.els[half][side].bottom = flapBoxBottom;
+        newBox.els[half][side].top = flapBoxTop;
+        newBox.els[half][side].bottom = flapBoxBottom;
         previousPositionX = previousPositionX += sideWidth;
       }
     }
@@ -167,49 +188,43 @@ const EditSize = ({ initialValues }) => {
 
   useLayoutEffect(() => {
     createBoxElements();
-  }, [initialValues]);
+  }, [initialSize]);
 
   return (
-    <Canvas
-      dpr={[window.devicePixelRatio, 2]}
-      camera={{
-        fov: 35,
-        near: 10,
-        far: 1000,
-        position: [0, 0, 800],
-      }}
-    >
-      <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="000000" />
-      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="000000" />
+    box && (
+      <Canvas dpr={[window.devicePixelRatio, 2]}>
+        <Camera />
+        {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="000000" />
+        <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="000000" /> */}
+        <group
+          position={[
+            -(box.params.width + box.params.length),
+            -0.5 * box.params.depth,
+            0,
+          ]}
+        >
+          {renderLineInfo()}
 
-      <group
-        position={[
-          -(box.params.width + box.params.length),
-          -0.5 * box.params.depth,
-          0,
-        ]}
-      >
-        {renderLineInfo()}
+          {box.els.frontHalf.width.side}
+          {box.els.frontHalf.length.side}
 
-        {box.els.frontHalf.width.side}
-        {box.els.frontHalf.length.side}
+          {box.els.backHalf.width.side}
+          {box.els.backHalf.length.side}
 
-        {box.els.backHalf.width.side}
-        {box.els.backHalf.length.side}
+          {box.els.frontHalf.length.top}
+          {box.els.frontHalf.width.top}
 
-        {box.els.frontHalf.length.top}
-        {box.els.frontHalf.width.top}
+          {box.els.backHalf.length.top}
+          {box.els.backHalf.width.top}
 
-        {box.els.backHalf.length.top}
-        {box.els.backHalf.width.top}
+          {box.els.frontHalf.length.bottom}
+          {box.els.frontHalf.width.bottom}
 
-        {box.els.frontHalf.length.bottom}
-        {box.els.frontHalf.width.bottom}
-
-        {box.els.backHalf.length.bottom}
-        {box.els.backHalf.width.bottom}
-      </group>
-    </Canvas>
+          {box.els.backHalf.length.bottom}
+          {box.els.backHalf.width.bottom}
+        </group>
+      </Canvas>
+    )
   );
 };
 

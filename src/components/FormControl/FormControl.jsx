@@ -33,29 +33,26 @@ const FormControl = ({ initialValues = {}, onSubmit }) => {
       <Row gutter={12}>
         <Col span={8}>
           <Form.Item label="Length(L)" name="length">
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber style={{ width: "100%" }} min={1} max={2000} />
           </Form.Item>
         </Col>
         <Col span={8}>
           <Form.Item label="Width(W)" name="width">
-            <InputNumber style={{ width: "100%" }} />
+            <InputNumber style={{ width: "100%" }} min={1} max={2000} />
           </Form.Item>
         </Col>
         <Col span={8}>
-          <Form.Item label="Height(H)" name="height">
-            <InputNumber style={{ width: "100%" }} />
+          <Form.Item label="Height(H)" name="depth">
+            <InputNumber style={{ width: "100%" }} min={1} max={2000} />
           </Form.Item>
         </Col>
       </Row>
       <Form.Item label="Thickness" name="thickness">
-        <InputNumber style={{ width: "100%" }} />
+        <InputNumber style={{ width: "100%" }} min={.1} max={1} />
       </Form.Item>
 
       <Form.Item label="Choose Material" name="material">
-        <Select
-          defaultValue="lucy"
-          options={MATERIAL_OPTIONS}
-        />
+        <Select defaultValue="lucy" options={MATERIAL_OPTIONS} />
       </Form.Item>
       <Form.Item wrapperCol={{ span: 24 }}>
         <Button type="primary" htmlType="submit">
