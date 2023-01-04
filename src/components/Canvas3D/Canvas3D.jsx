@@ -10,6 +10,7 @@ import React, {
 } from "react";
 import * as THREE from "three";
 import { ELS } from "../../utils/constant";
+import Line from "../common/Line/Line";
 
 const Camera = () => {
   const camera = useRef();
@@ -27,65 +28,188 @@ const Camera = () => {
 };
 
 const initialState = {
-  backHalf: {
-    width: {
-      top: null,
-      side: null,
-      bottom: null,
+  params: {
+    width: 27,
+    widthLimits: [15, 70],
+    length: 80,
+    lengthLimits: [70, 120],
+    depth: 45,
+    depthLimits: [15, 70],
+    flapGap: 1,
+  },
+  els: {
+    backHalf: {
+      width: {
+        top: new THREE.Mesh(),
+        side: new THREE.Mesh(),
+        bottom: new THREE.Mesh(),
+      },
+      length: {
+        top: new THREE.Mesh(),
+        side: new THREE.Mesh(),
+        bottom: new THREE.Mesh(),
+      },
     },
-    length: {
-      top: null,
-      side: null,
-      bottom: null,
+    frontHalf: {
+      width: {
+        top: new THREE.Mesh(),
+        side: new THREE.Mesh(),
+        bottom: new THREE.Mesh(),
+      },
+      length: {
+        top: new THREE.Mesh(),
+        side: new THREE.Mesh(),
+        bottom: new THREE.Mesh(),
+      },
     },
   },
-  frontHalf: {
-    width: {
-      top: null,
-      side: null,
-      bottom: null,
-    },
-    length: {
-      top: null,
-      side: null,
-      bottom: null,
-    },
+  animated: {
+    openingAngle: 0.02 * Math.PI,
   },
 };
 
 const Boxes = () => {
-  const boxSize = [30, 40, 1];
-  const [boxRender, setBoxRender] = useState([]);
-  const [angle] = useState(() => ({ v: 0 }));
+  const [box, setBox] = useState(initialState);
+  const [boxesGroup, setBoxesGroup] = useState([]);
+  const [angle] = useState(() => ({
+    v: 0,
+    flapAngles: {
+      backHalf: {
+        width: {
+          top: 0,
+          bottom: Math.PI,
+        },
+        length: {
+          top: 0,
+          bottom: Math.PI,
+        },
+      },
+      frontHalf: {
+        width: {
+          top: 0,
+          bottom: Math.PI,
+        },
+        length: {
+          top: 0,
+          bottom: Math.PI,
+        },
+      },
+    },
+  }));
   function updateSceneScroll() {
-    console.log("asdsd", boxRender, angle.v);
-    boxRender.forEach((b, idx) => {
+    boxesGroup.forEach((b, idx) => {
       if (idx > 0) {
         b.rotation.y = angle.v;
       }
+      boxesGroup.forEach((b, idx) => {
+        if (b.name === "front") {
+          b.children.forEach((flap) => {
+            switch (flap.name) {
+              case "top-width":
+                flap.rotation.x = angle.flapAngles.frontHalf.width.top;
+                break;
+              case "top-length":
+                flap.rotation.x = angle.flapAngles.frontHalf.length.top;
+                break;
+              case "bottom-width":
+                flap.rotation.x = angle.flapAngles.frontHalf.width.bottom;
+                break;
+              case "bottom-length":
+                flap.rotation.x = -angle.flapAngles.frontHalf.length.bottom;
+                break;
+              default:
+                break;
+            }
+          });
+        } else {
+          b.children.forEach((flap) => {
+            switch (flap.name) {
+              case "top-width":
+                flap.rotation.x = angle.flapAngles.backHalf.width.top;
+                break;
+              case "top-length":
+                flap.rotation.x = angle.flapAngles.backHalf.length.top;
+                break;
+              case "bottom-width":
+                flap.rotation.x = angle.flapAngles.backHalf.width.bottom;
+                break;
+              case "bottom-length":
+                flap.rotation.x = angle.flapAngles.backHalf.length.bottom;
+                break;
+              default:
+                break;
+            }
+          });
+        }
+      });
     });
   }
 
   const createBoxElements = () => {
-    const newBoxes = [...boxRender];
-    const boxGeometry = new THREE.PlaneGeometry(boxSize[0], boxSize[1]);
+    const newBox = { ...box };
+    const newBoxesGroup = [...boxesGroup];
     const boxMaterial = new THREE.MeshBasicMaterial({
       color: 0x3c9aa0,
       wireframe: true,
     });
-    const boxMesh = new THREE.Mesh(boxGeometry, boxMaterial);
+    const boxMesh = new THREE.Mesh();
     const numberOfBoxes = 4;
-    boxGeometry.translate(-0.5 * boxSize[0], 0.5 * boxSize[1], 0);
     for (let i = 0; i < numberOfBoxes; i++) {
-      newBoxes[i] = boxMesh.clone();
+      newBoxesGroup[i] = boxMesh.clone();
+      const side = i % 2 === 0 ? "width" : "length";
 
+      const half = i % 2 === 0 ? "front" : "back";
+      const sideWidth =
+        side === "width" ? newBox.params.width : newBox.params.length;
+      const boxGeometry = new THREE.PlaneGeometry(
+        sideWidth,
+        newBox.params.depth
+      );
+      const positionX =
+        side === "width" ? newBox.params.length : newBox.params.width;
+      boxGeometry.translate(-0.5 * sideWidth, 0.5 * newBox.params.depth, 0);
+      newBoxesGroup[i].geometry = boxGeometry.clone();
+      newBoxesGroup[i].material = boxMaterial.clone();
+
+      const flapWidth =
+        side === "width" ? sideWidth - 2 * newBox.params.flapGap : sideWidth;
+      const flapHeight = 0.5 * newBox.params.width;
+      const flapPlaneGeometry = new THREE.PlaneGeometry(flapWidth, flapHeight);
+      // flapPlaneGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
+      const flapPotionX = side === "width" ? -newBox.params.flapGap : 0;
+
+      const flapTop = boxMesh.clone();
+      flapTop.name = `top-${side}`;
+      const topGeometry = flapPlaneGeometry.clone();
+      topGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
+      flapTop.geometry = topGeometry;
+      flapTop.material = boxMaterial.clone();
+      flapTop.position.y = box.params.depth;
+      flapTop.position.x = flapPotionX;
+
+      const flapBottom = boxMesh.clone();
+      flapBottom.name = `bottom-${side}`;
+      const bottomGeometry = flapPlaneGeometry.clone();
+      bottomGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
+      flapBottom.geometry = bottomGeometry;
+      flapBottom.material = boxMaterial.clone();
+
+      flapBottom.rotation.x = angle.flapAngles.frontHalf.width.bottom;
+      flapBottom.position.y = 0;
+      flapBottom.position.x = flapPotionX;
+
+      newBoxesGroup[i].add(flapBottom);
+      newBoxesGroup[i].add(flapTop);
+
+      newBoxesGroup[i].name = half;
       if (i > 0) {
-        newBoxes[i - 1].add(newBoxes[i]);
-        newBoxes[i].position.x = -boxSize[0];
+        newBoxesGroup[i - 1].add(newBoxesGroup[i]);
+        newBoxesGroup[i].position.x = -positionX;
+      } else {
+        newBoxesGroup[i].position.y = -0.5 * newBox.params.depth;
       }
     }
-
-    setBoxRender(newBoxes);
+    setBoxesGroup(newBoxesGroup);
   };
 
   useLayoutEffect(() => {
@@ -93,32 +217,83 @@ const Boxes = () => {
   }, []);
 
   useEffect(() => {
-    gsap.to(angle, {
-      duration: 3,
-      v: 0.5 * Math.PI,
-      ease: "power1.out",
-      onUpdate: updateSceneScroll,
-    });
-  }, [boxRender]);
+    gsap
+      .timeline({
+        onUpdate: updateSceneScroll,
+      })
+      .to(angle, {
+        duration: 1,
+        v: 0.5 * Math.PI,
+        ease: "power1.out",
+      })
+      .to(
+        [angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width],
+        {
+          duration: 0.6,
+          bottom: 0.5 * Math.PI,
+          ease: "back.in(3)",
+        },
+        0.9
+      )
+      .to(
+        angle.flapAngles.backHalf.length,
+        {
+          duration: 0.7,
+          bottom: 0.5 * Math.PI,
+          ease: "back.in(2)",
+        },
+        1.1
+      )
+      .to(
+        angle.flapAngles.frontHalf.length,
+        {
+          duration: 0.8,
+          bottom: 0.5 * Math.PI,
+          ease: "back.in(3)",
+        },
+        1.4
+      )
+      .to(
+        [angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width],
+        {
+          duration: 0.6,
+          top: 0.5 * Math.PI,
+          ease: "back.in(3)",
+        },
+        1.4
+      )
+      .to(
+        angle.flapAngles.backHalf.length,
+        {
+          duration: 0.7,
+          top: 0.5 * Math.PI,
+          ease: "back.in(3)",
+        },
+        1.7
+      )
+      .to(
+        angle.flapAngles.frontHalf.length,
+        {
+          duration: 0.9,
+          top: 0.5 * Math.PI,
+          ease: "back.in(4)",
+        },
+        1.8
+      );
+  }, [boxesGroup]);
 
-  return boxRender.length > 0 && <primitive object={boxRender[0]} />;
+  return boxesGroup.length > 0 && <primitive object={boxesGroup[0]} />;
 };
 
 const Canvas3D = ({ initialSize }) => {
-  const [box, setBox] = useState({ params: initialSize, els: ELS });
   const canvasRef = useRef();
 
   return (
     <Canvas ref={canvasRef} dpr={[window.devicePixelRatio, 2]}>
       <Camera />
-      <OrbitControls
-        enableZoom={false}
-        enableDamping
-        autoRotate
-        autoRotateSpeed={0.25}
-      />
-      {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
-      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" /> */}
+      <OrbitControls enableZoom={false} enableDamping />
+      <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
+      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" />
       <Suspense fallback={null}>
         <Boxes />
       </Suspense>
