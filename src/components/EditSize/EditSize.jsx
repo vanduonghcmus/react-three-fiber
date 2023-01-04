@@ -1,25 +1,9 @@
 import { Html, PerspectiveCamera } from "@react-three/drei";
-import { Canvas, extend, useThree } from "@react-three/fiber";
+import { Canvas, useThree } from "@react-three/fiber";
 import React, { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { TextGeometry } from "three/examples/jsm/geometries/TextGeometry";
-import { ELS } from "../../utils/constanst";
-extend({ TextGeometry });
-
-function Line({ start, end, color }) {
-  const ref = useRef();
-  useLayoutEffect(() => {
-    ref.current.geometry.setFromPoints(
-      [start, end].map((point) => new THREE.Vector3(...point))
-    );
-  }, [start, end]);
-  return (
-    <line ref={ref}>
-      <bufferGeometry />
-      <lineBasicMaterial color={color} />
-    </line>
-  );
-}
+import { ELS } from "../../utils/constant";
+import Line from "../common/Line/Line";
 
 function Text({ fontSize = 12, color = "#000000", position = [], children }) {
   return (

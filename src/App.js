@@ -2,6 +2,8 @@ import { Col, Layout, Row, Tabs, theme } from "antd";
 import { Content } from "antd/es/layout/layout";
 import { useState } from "react";
 import EditSize from "./components/EditSize/EditSize";
+import Canvas3D from "./components/Canvas3D/Canvas3D";
+
 import FormControl from "./components/FormControl/FormControl";
 import "./App.css";
 import { calculateSizeByUnit } from "./utils";
@@ -20,7 +22,6 @@ function App() {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  const [currentTab, setCurrentTab] = useState();
   const [boxSize, setBoxSize] = useState(initialValues);
 
   const TAB_ITEMS = [
@@ -32,7 +33,7 @@ function App() {
     {
       key: 2,
       label: "tab 2",
-      children: `Content of Tab 2`,
+      children: <Canvas3D initialSize={boxSize}/>,
     },
     {
       key: 3,
