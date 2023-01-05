@@ -1,11 +1,11 @@
 import { Html, PerspectiveCamera } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ELS } from "../../utils/constant";
 import Line from "../common/Line/Line";
 
-function Text({ fontSize = 12, color = "#000000", position = [], children }) {
+function Text({ fontSize = 15, color = "#000000", position = [], children }) {
   return (
     <Html position={position}>
       <div
@@ -37,23 +37,10 @@ function LineBox2D({ length, width, position = { x: 0, y: 0 }, color = "" }) {
   );
 }
 
-const Camera = () => {
-  const camera = useRef();
-  const { aspect } = useThree();
-  return (
-    <PerspectiveCamera
-      ref={camera}
-      aspect={aspect}
-      fov={45}
-      position={[0, 0, 200]}
-      makeDefault
-      onUpdate={(self) => self.updateProjectionMatrix()}
-    />
-  );
-};
-
 const EditSize = ({ initialSize }) => {
   const [box, setBox] = useState(undefined);
+
+  const { camera } = useThree();
 
   function createBoxElements() {
     const newBox = { params: initialSize, els: ELS };
@@ -114,13 +101,14 @@ const EditSize = ({ initialSize }) => {
   }
 
   function renderLineInfo() {
+    console.log(box.params.length * 0.5, 0.25 * box.params.depth);
     return (
       <>
         <Text
           position={[box.params.length * 0.5, 0.25 * box.params.depth, 0]}
           color="#FF9E84"
         >
-          L: {box.params.length}mm
+          L: {box.params.length}cm
         </Text>
         <Line
           start={[0, 0.25 * box.params.depth, 0]}
@@ -135,7 +123,7 @@ const EditSize = ({ initialSize }) => {
           ]}
           color="#FF9E84"
         >
-          L: {box.params.width}mm
+          L: {box.params.width}cm
         </Text>
         <Line
           start={[box.params.length, 0.75 * box.params.depth, 0]}
@@ -155,7 +143,7 @@ const EditSize = ({ initialSize }) => {
           ]}
           color="#FF9E84"
         >
-          H: {box.params.depth}mm
+          H: {box.params.depth}cm
         </Text>
         <Line
           start={[1.5 * (box.params.width + box.params.length), 0, 0]}
@@ -174,10 +162,23 @@ const EditSize = ({ initialSize }) => {
     createBoxElements();
   }, [initialSize]);
 
+  useEffect(() => {
+    if (initialSize) {
+      camera.position.set(0, 0, (initialSize.width + initialSize.length) * 2);
+    }
+  }, [initialSize]);
+
   return (
     box && (
-      <Canvas dpr={[window.devicePixelRatio, 2]}>
-        <Camera />
+      <>
+        <PerspectiveCamera
+          makeDefault
+          position={[0, 0, (initialSize.width + initialSize.length) * 2]}
+          fov={45}
+          far={1000}
+          near={10}
+          zoom={1}
+        />
         {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="000000" />
         <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="000000" /> */}
         <group
@@ -207,7 +208,7 @@ const EditSize = ({ initialSize }) => {
           {box.els.backHalf.length.bottom}
           {box.els.backHalf.width.bottom}
         </group>
-      </Canvas>
+      </>
     )
   );
 };

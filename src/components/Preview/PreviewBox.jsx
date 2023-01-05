@@ -46,7 +46,7 @@ const initialState = {
     },
   },
   animated: {
-    openingAngle: 0.02 * Math.PI,
+    openingAngle: angleToRadians(0),
   },
 };
 
@@ -54,30 +54,31 @@ const Boxes = () => {
   const [box, setBox] = useState(initialState);
   const [boxesGroup, setBoxesGroup] = useState([]);
   const [angle] = useState(() => ({
-    v: 0,
+    v: angleToRadians(90),
     flapAngles: {
       backHalf: {
         width: {
-          top: 0,
-          bottom: Math.PI,
+          top: angleToRadians(90),
+          bottom: angleToRadians(90),
         },
         length: {
-          top: 0,
-          bottom: Math.PI,
+          top: angleToRadians(90),
+          bottom: angleToRadians(90),
         },
       },
       frontHalf: {
         width: {
-          top: 0,
-          bottom: Math.PI,
+          top: angleToRadians(90),
+          bottom: angleToRadians(90),
         },
         length: {
-          top: 0,
-          bottom: Math.PI,
+          top: angleToRadians(90),
+          bottom: angleToRadians(90),
         },
       },
     },
   }));
+
   function updateSceneScroll() {
     boxesGroup.forEach((b, idx) => {
       b.rotation.y = angle.v;
@@ -185,8 +186,10 @@ const Boxes = () => {
       if (i > 0) {
         newBoxesGroup[i - 1].add(newBoxesGroup[i]);
         newBoxesGroup[i].position.x = -positionX;
+        newBoxesGroup[i].rotation.y = angle.v;
       } else {
         newBoxesGroup[i].position.y = -0.5 * newBox.params.depth;
+        newBoxesGroup[i].rotation.y = angle.v;
       }
     }
     setBoxesGroup(newBoxesGroup);
@@ -201,64 +204,28 @@ const Boxes = () => {
       .timeline({
         onUpdate: updateSceneScroll,
       })
-      .to(angle, {
-        duration: 1.5,
-        v: angleToRadians(90),
+      .to([angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width], {
+        duration: 1,
+        top: angleToRadians(-90),
         ease: "power1.out",
-      })
-      .to(
-        [angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width],
-        {
-          duration: 1,
-          bottom: angleToRadians(90),
-          ease: "back.in(3)",
-        },
-        1.6
-      )
+      },0)
       .to(
         angle.flapAngles.backHalf.length,
         {
-          duration: 1.5,
-          bottom: angleToRadians(90),
-          ease: "back.in(2)",
+          duration: 1,
+          top: angleToRadians(-90),
+          ease: "power1.out",
         },
-        1.6
+        1.5
       )
       .to(
         angle.flapAngles.frontHalf.length,
         {
           duration: 1,
-          bottom: angleToRadians(90),
-          ease: "back.in(3)",
+          top: angleToRadians(-90),
+          ease: "power1.out",
         },
-        1.6
-      )
-      .to(
-        [angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width],
-        {
-          duration: 1,
-          top: angleToRadians(90),
-          ease: "back.in(3)",
-        },
-        2.8
-      )
-      .to(
-        angle.flapAngles.backHalf.length,
-        {
-          duration: 1,
-          top:angleToRadians(90),
-          ease: "back.in(3)",
-        },
-        3.2
-      )
-      .to(
-        angle.flapAngles.frontHalf.length,
-        {
-          duration: 1,
-          top: angleToRadians(90),
-          ease: "back.in(4)",
-        },
-        3.2
+        2
       );
   }, [boxesGroup]);
 
@@ -271,7 +238,7 @@ const Boxes = () => {
   );
 };
 
-const Canvas3D = ({ initialSize }) => {
+const PreviewBox = ({ initialSize }) => {
   const orbitControlRef = useRef(null);
   useFrame(() => {
     if (orbitControlRef.current) {
@@ -289,13 +256,11 @@ const Canvas3D = ({ initialSize }) => {
       />
       <PerspectiveCamera
         makeDefault
-        position={[-20, 40, 100]}
+        position={[-20, 60, 100]}
         fov={45}
         far={1000}
         near={10}
       />
-      {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
-      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" /> */}
       <ambientLight args={["#ffffff", 1]}>
         <group>
           <pointLight color="#fff" position={[100, 0, 50]} intensity={0.7} />
@@ -307,4 +272,4 @@ const Canvas3D = ({ initialSize }) => {
   );
 };
 
-export default Canvas3D;
+export default PreviewBox;
