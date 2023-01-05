@@ -9,8 +9,64 @@ import React, {
   useState,
 } from "react";
 import * as THREE from "three";
+import { mergeBufferGeometries } from "three/examples/jsm/utils/BufferGeometryUtils";
+
 import { ELS } from "../../utils/constant";
 import Line from "../common/Line/Line";
+
+function createSideGeometry(baseGeometry, size, folds, hasMiddleLayer, target) {
+  const geometriesToMerge = [];
+  function getLayerGeometry(offset) {
+    const layerGeometry = baseGeometry.clone();
+    const positionAttr = layerGeometry.attributes.position;
+    for (let i = 0; i < positionAttr.count; i++) {
+      const x = positionAttr.getX(i);
+      const y = positionAttr.getY(i);
+      let z = positionAttr.getZ(i) + offset(x);
+      z = applyFolds(x, y, z);
+      positionAttr.setXYZ(i, x, y, z);
+    }
+    console.log('layerGeometry',layerGeometry);
+    return layerGeometry;
+  }
+  function applyFolds(x, y, z) {
+    let modifier = (c, s) => 1 - Math.pow(c / (0.5 * s), 10);
+    if ((x > 0 && folds[1]) || (x < 0 && folds[3])) {
+      z *= modifier(x, size[0]);
+    }
+    if ((y > 0 && folds[0]) || (y < 0 && folds[2])) {
+      z *= modifier(y, size[1]);
+    }
+    return z;
+  }
+  geometriesToMerge.push(
+    getLayerGeometry(
+      (v) =>
+        -0.5 * target.params.thickness +
+        0.01 * Math.sin(target.params.fluteFreq * v)
+    )
+  );
+  geometriesToMerge.push(
+    getLayerGeometry(
+      (v) =>
+        0.5 * target.params.thickness +
+        0.01 * Math.sin(target.params.fluteFreq * v)
+    )
+  );
+  if (hasMiddleLayer) {
+    geometriesToMerge.push(
+      getLayerGeometry(
+        (v) =>
+          0.5 * target.params.thickness * Math.sin(target.params.fluteFreq * v)
+      )
+    );
+  }
+
+  const mergedGeometry = new mergeBufferGeometries(geometriesToMerge, false);
+  mergedGeometry.computeVertexNormals();
+
+  return mergedGeometry;
+}
 
 const Camera = () => {
   const camera = useRef();
@@ -20,7 +76,7 @@ const Camera = () => {
       ref={camera}
       aspect={aspect}
       fov={45}
-      position={[40, 90, 110]}
+      position={[100, 100, 200]}
       makeDefault
       onUpdate={(self) => self.updateProjectionMatrix()}
     />
@@ -36,6 +92,8 @@ const initialState = {
     depth: 45,
     depthLimits: [15, 70],
     flapGap: 1,
+    thickness: 0.6,
+    thicknessLimits: [0.1, 1],
   },
   els: {
     backHalf: {
@@ -149,8 +207,9 @@ const Boxes = () => {
     const newBox = { ...box };
     const newBoxesGroup = [...boxesGroup];
     const boxMaterial = new THREE.MeshBasicMaterial({
-      color: 0x3c9aa0,
-      wireframe: true,
+      color: new THREE.Color(0x9c8d7b),
+      side: THREE.DoubleSide,
+      wireframe: false,
     });
     const boxMesh = new THREE.Mesh();
     const numberOfBoxes = 4;
@@ -161,21 +220,32 @@ const Boxes = () => {
       const half = i % 2 === 0 ? "front" : "back";
       const sideWidth =
         side === "width" ? newBox.params.width : newBox.params.length;
-      const boxGeometry = new THREE.PlaneGeometry(
-        sideWidth,
-        newBox.params.depth
-      );
       const positionX =
         side === "width" ? newBox.params.length : newBox.params.width;
-      boxGeometry.translate(-0.5 * sideWidth, 0.5 * newBox.params.depth, 0);
-      newBoxesGroup[i].geometry = boxGeometry.clone();
+
+      const sidePlaneGeometry = new THREE.PlaneGeometry(
+        sideWidth,
+        newBox.params.depth,
+        Math.floor(5 * sideWidth),
+        Math.floor(0.2 * box.params.depth)
+      );
+      // const sideGeometry = createSideGeometry(
+      //   sidePlaneGeometry,
+      //   [sideWidth, box.params.depth],
+      //   [true, true, true, true],
+      //   false,
+      //   newBox
+      // );
+
+      const sideGeometry=sidePlaneGeometry.clone();
+      sideGeometry.translate(-0.5 * sideWidth, 0.5 * newBox.params.depth, 0);
+      newBoxesGroup[i].geometry = sideGeometry;
       newBoxesGroup[i].material = boxMaterial.clone();
 
       const flapWidth =
         side === "width" ? sideWidth - 2 * newBox.params.flapGap : sideWidth;
       const flapHeight = 0.5 * newBox.params.width;
       const flapPlaneGeometry = new THREE.PlaneGeometry(flapWidth, flapHeight);
-      // flapPlaneGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
       const flapPotionX = side === "width" ? -newBox.params.flapGap : 0;
 
       const flapTop = boxMesh.clone();
@@ -233,7 +303,7 @@ const Boxes = () => {
           bottom: 0.5 * Math.PI,
           ease: "back.in(3)",
         },
-        0.9
+        1
       )
       .to(
         angle.flapAngles.backHalf.length,
@@ -285,15 +355,27 @@ const Boxes = () => {
   return boxesGroup.length > 0 && <primitive object={boxesGroup[0]} />;
 };
 
+new THREE.PointLight();
+
 const Canvas3D = ({ initialSize }) => {
   const canvasRef = useRef();
 
   return (
     <Canvas ref={canvasRef} dpr={[window.devicePixelRatio, 2]}>
       <Camera />
-      <OrbitControls enableZoom={false} enableDamping />
-      <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
-      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" />
+      <group>
+        <ambientLight color="#ffffff">
+          <pointLight
+            position={[-30, 300, 0]}
+            intensity={0.5}
+            color="#ffffff"
+          />
+          <pointLight position={[50, 0, 150]} intensity={0.5} color="#ffffff" />
+        </ambientLight>
+      </group>
+      <OrbitControls enableZoom enableDamping />
+      {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
+      <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" /> */}
       <Suspense fallback={null}>
         <Boxes />
       </Suspense>
