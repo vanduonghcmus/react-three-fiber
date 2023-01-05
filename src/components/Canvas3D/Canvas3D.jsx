@@ -1,4 +1,4 @@
-import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
+import { OrbitControls, PerspectiveCamera, useHelper } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import gsap from "gsap";
 import React, {
@@ -11,62 +11,7 @@ import React, {
 import * as THREE from "three";
 import { mergeBufferGeometries } from "three/examples/jsm/utils/BufferGeometryUtils";
 
-import { ELS } from "../../utils/constant";
 import Line from "../common/Line/Line";
-
-function createSideGeometry(baseGeometry, size, folds, hasMiddleLayer, target) {
-  const geometriesToMerge = [];
-  function getLayerGeometry(offset) {
-    const layerGeometry = baseGeometry.clone();
-    const positionAttr = layerGeometry.attributes.position;
-    for (let i = 0; i < positionAttr.count; i++) {
-      const x = positionAttr.getX(i);
-      const y = positionAttr.getY(i);
-      let z = positionAttr.getZ(i) + offset(x);
-      z = applyFolds(x, y, z);
-      positionAttr.setXYZ(i, x, y, z);
-    }
-    console.log('layerGeometry',layerGeometry);
-    return layerGeometry;
-  }
-  function applyFolds(x, y, z) {
-    let modifier = (c, s) => 1 - Math.pow(c / (0.5 * s), 10);
-    if ((x > 0 && folds[1]) || (x < 0 && folds[3])) {
-      z *= modifier(x, size[0]);
-    }
-    if ((y > 0 && folds[0]) || (y < 0 && folds[2])) {
-      z *= modifier(y, size[1]);
-    }
-    return z;
-  }
-  geometriesToMerge.push(
-    getLayerGeometry(
-      (v) =>
-        -0.5 * target.params.thickness +
-        0.01 * Math.sin(target.params.fluteFreq * v)
-    )
-  );
-  geometriesToMerge.push(
-    getLayerGeometry(
-      (v) =>
-        0.5 * target.params.thickness +
-        0.01 * Math.sin(target.params.fluteFreq * v)
-    )
-  );
-  if (hasMiddleLayer) {
-    geometriesToMerge.push(
-      getLayerGeometry(
-        (v) =>
-          0.5 * target.params.thickness * Math.sin(target.params.fluteFreq * v)
-      )
-    );
-  }
-
-  const mergedGeometry = new mergeBufferGeometries(geometriesToMerge, false);
-  mergedGeometry.computeVertexNormals();
-
-  return mergedGeometry;
-}
 
 const Camera = () => {
   const camera = useRef();
@@ -76,7 +21,9 @@ const Camera = () => {
       ref={camera}
       aspect={aspect}
       fov={45}
-      position={[100, 100, 200]}
+      far={1000}
+      near={10}
+      position={[50, 50, 50]}
       makeDefault
       onUpdate={(self) => self.updateProjectionMatrix()}
     />
@@ -85,15 +32,17 @@ const Camera = () => {
 
 const initialState = {
   params: {
-    width: 27,
+    width: 21.4,
     widthLimits: [15, 70],
-    length: 80,
+    length: 43.4,
     lengthLimits: [70, 120],
-    depth: 45,
+    depth: 27.8,
     depthLimits: [15, 70],
     flapGap: 1,
-    thickness: 0.6,
+    thickness: 1,
     thicknessLimits: [0.1, 1],
+    fluteFreq: 0.9,
+    widthSegments: 300,
   },
   els: {
     backHalf: {
@@ -203,13 +152,40 @@ const Boxes = () => {
     });
   }
 
+  function createSideGeometry(baseGeometry) {
+    const offset = (v) =>
+      0.5 * box.params.thickness * Math.sin(box.params.fluteFreq * v);
+    // const geometriesToMerge = [
+    //   getLayerGeometry(-0.5 * box.params.thickness),
+    //   getLayerGeometry(0),
+    //   getLayerGeometry(0.5 * box.params.thickness),
+    // ];
+
+    function getLayerGeometry() {
+      const layerGeometry = baseGeometry.clone();
+      const positionAttr = layerGeometry.attributes.position;
+      for (let i = 0; i < positionAttr.count; i++) {
+        const x = positionAttr.getX(i);
+        const y = positionAttr.getY(i);
+        let z = positionAttr.getZ(i) + offset(x);
+        console.log(offset(x));
+        positionAttr.setXYZ(i, x, y, z);
+      }
+      return layerGeometry;
+    }
+
+    // const mergedGeometry = new mergeBufferGeometries(geometriesToMerge, false);
+    // mergedGeometry.computeVertexNormals();
+
+    return getLayerGeometry();
+  }
+
   const createBoxElements = () => {
     const newBox = { ...box };
     const newBoxesGroup = [...boxesGroup];
     const boxMaterial = new THREE.MeshBasicMaterial({
       color: new THREE.Color(0x9c8d7b),
       side: THREE.DoubleSide,
-      wireframe: false,
     });
     const boxMesh = new THREE.Mesh();
     const numberOfBoxes = 4;
@@ -225,28 +201,18 @@ const Boxes = () => {
 
       const sidePlaneGeometry = new THREE.PlaneGeometry(
         sideWidth,
-        newBox.params.depth,
-        Math.floor(5 * sideWidth),
-        Math.floor(0.2 * box.params.depth)
+        newBox.params.depth
       );
-      // const sideGeometry = createSideGeometry(
-      //   sidePlaneGeometry,
-      //   [sideWidth, box.params.depth],
-      //   [true, true, true, true],
-      //   false,
-      //   newBox
-      // );
 
-      const sideGeometry=sidePlaneGeometry.clone();
+      const sideGeometry = sidePlaneGeometry;
       sideGeometry.translate(-0.5 * sideWidth, 0.5 * newBox.params.depth, 0);
       newBoxesGroup[i].geometry = sideGeometry;
       newBoxesGroup[i].material = boxMaterial.clone();
 
-      const flapWidth =
-        side === "width" ? sideWidth - 2 * newBox.params.flapGap : sideWidth;
+      const flapWidth = sideWidth - newBox.params.flapGap;
       const flapHeight = 0.5 * newBox.params.width;
       const flapPlaneGeometry = new THREE.PlaneGeometry(flapWidth, flapHeight);
-      const flapPotionX = side === "width" ? -newBox.params.flapGap : 0;
+      const flapPotionX = -0.5 * newBox.params.flapGap;
 
       const flapTop = boxMesh.clone();
       flapTop.name = `top-${side}`;
@@ -265,7 +231,6 @@ const Boxes = () => {
       flapBottom.material = boxMaterial.clone();
 
       flapBottom.rotation.x = angle.flapAngles.frontHalf.width.bottom;
-      flapBottom.position.y = 0;
       flapBottom.position.x = flapPotionX;
 
       newBoxesGroup[i].add(flapBottom);
@@ -318,7 +283,7 @@ const Boxes = () => {
         angle.flapAngles.frontHalf.length,
         {
           duration: 0.8,
-          bottom: 0.5 * Math.PI,
+          bottom: 0.49 * Math.PI,
           ease: "back.in(3)",
         },
         1.4
@@ -345,7 +310,7 @@ const Boxes = () => {
         angle.flapAngles.frontHalf.length,
         {
           duration: 0.9,
-          top: 0.5 * Math.PI,
+          top: 0.49 * Math.PI,
           ease: "back.in(4)",
         },
         1.8
@@ -355,25 +320,23 @@ const Boxes = () => {
   return boxesGroup.length > 0 && <primitive object={boxesGroup[0]} />;
 };
 
-new THREE.PointLight();
-
 const Canvas3D = ({ initialSize }) => {
   const canvasRef = useRef();
 
   return (
-    <Canvas ref={canvasRef} dpr={[window.devicePixelRatio, 2]}>
-      <Camera />
-      <group>
-        <ambientLight color="#ffffff">
-          <pointLight
-            position={[-30, 300, 0]}
-            intensity={0.5}
-            color="#ffffff"
-          />
-          <pointLight position={[50, 0, 150]} intensity={0.5} color="#ffffff" />
-        </ambientLight>
-      </group>
-      <OrbitControls enableZoom enableDamping />
+    <Canvas
+      ref={canvasRef}
+      dpr={[window.devicePixelRatio, 2]}
+      camera={{ far: 1000, near: 10, fov: 45, position: [40, 90, 110] }}
+      shadows
+    >
+      {/* <Camera /> */}
+      <ambientLight args={["#ffffff", 1]}>
+        <group>
+          <pointLight color="#000" position={[40, 90, 110]} intensity={0.7} />
+        </group>
+      </ambientLight>
+      <OrbitControls enableZoom enableDamping={false} autoRotate />
       {/* <Line start={[0, -1000, 0]} end={[0, 1000, 0]} color="#000000" />
       <Line start={[-1000, 0, 0]} end={[1000, 0, 0]} color="#000000" /> */}
       <Suspense fallback={null}>
@@ -384,3 +347,4 @@ const Canvas3D = ({ initialSize }) => {
 };
 
 export default Canvas3D;
+c
