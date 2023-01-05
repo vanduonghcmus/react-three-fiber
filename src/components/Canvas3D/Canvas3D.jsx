@@ -154,10 +154,9 @@ const Boxes = () => {
       newBoxesGroup[i].geometry = sideGeometry;
       newBoxesGroup[i].material = boxMaterial.clone();
 
-      const flapWidth = sideWidth - newBox.params.flapGap;
+      const flapWidth = sideWidth - 0.5 * newBox.params.flapGap;
       const flapHeight = 0.5 * newBox.params.width;
       const flapPlaneGeometry = new THREE.PlaneGeometry(flapWidth, flapHeight);
-      const flapPotionX = -0.5 * newBox.params.flapGap;
 
       const flapTop = boxMesh.clone();
       flapTop.name = `top-${side}`;
@@ -166,7 +165,7 @@ const Boxes = () => {
       flapTop.geometry = topGeometry;
       flapTop.material = boxMaterial.clone();
       flapTop.position.y = box.params.depth;
-      flapTop.position.x = flapPotionX;
+      flapTop.position.x = 0;
 
       const flapBottom = boxMesh.clone();
       flapBottom.name = `bottom-${side}`;
@@ -176,7 +175,7 @@ const Boxes = () => {
       flapBottom.material = boxMaterial.clone();
 
       flapBottom.rotation.x = angle.flapAngles.frontHalf.width.bottom;
-      flapBottom.position.x = flapPotionX;
+      flapBottom.position.x = 0;
 
       newBoxesGroup[i].add(flapBottom);
       newBoxesGroup[i].add(flapTop);
@@ -246,7 +245,7 @@ const Boxes = () => {
         angle.flapAngles.backHalf.length,
         {
           duration: 1,
-          top:angleToRadians(90),
+          top: angleToRadians(90),
           ease: "back.in(3)",
         },
         3.2
