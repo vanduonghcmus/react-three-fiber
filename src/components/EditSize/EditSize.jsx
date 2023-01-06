@@ -1,6 +1,7 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { Html, PerspectiveCamera } from "@react-three/drei";
-import { Canvas, useThree } from "@react-three/fiber";
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useThree } from "@react-three/fiber";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { ELS } from "../../utils/constant";
 import Line from "../common/Line/Line";
@@ -101,7 +102,6 @@ const EditSize = ({ initialSize }) => {
   }
 
   function renderLineInfo() {
-    console.log(box.params.length * 0.5, 0.25 * box.params.depth);
     return (
       <>
         <Text
@@ -160,9 +160,6 @@ const EditSize = ({ initialSize }) => {
 
   useLayoutEffect(() => {
     createBoxElements();
-  }, [initialSize]);
-
-  useEffect(() => {
     if (initialSize) {
       camera.position.set(0, 0, (initialSize.width + initialSize.length) * 2);
     }

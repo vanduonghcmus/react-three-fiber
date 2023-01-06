@@ -1,24 +1,11 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
 import gsap from "gsap";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import * as THREE from "three";
-import { angleToRadians } from "../../utils";
-
+import { angleToRadians, createSideGeometry } from "../../utils";
 const initialState = {
-  params: {
-    width: 21.4,
-    widthLimits: [15, 70],
-    length: 43.4,
-    lengthLimits: [70, 120],
-    depth: 27.8,
-    depthLimits: [15, 70],
-    flapGap: 1,
-    thickness: 1,
-    thicknessLimits: [0.1, 1],
-    fluteFreq: 0.9,
-    widthSegments: 300,
-  },
   els: {
     backHalf: {
       width: {
@@ -50,8 +37,7 @@ const initialState = {
   },
 };
 
-const Boxes = () => {
-  const [box, setBox] = useState(initialState);
+const Boxes = ({ initialSize }) => {
   const [boxesGroup, setBoxesGroup] = useState([]);
   const [angle] = useState(() => ({
     v: angleToRadians(90),
@@ -79,7 +65,7 @@ const Boxes = () => {
     },
   }));
 
-  function updateSceneScroll() {
+  function updatePanelTransform() {
     boxesGroup.forEach((b, idx) => {
       b.rotation.y = angle.v;
       boxesGroup.forEach((b, idx) => {
@@ -127,7 +113,7 @@ const Boxes = () => {
   }
 
   const createBoxElements = () => {
-    const newBox = { ...box };
+    const newBox = { ...initialState, params: { ...initialSize } };
     const newBoxesGroup = [...boxesGroup];
     const boxMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x9c8d7b),
@@ -145,32 +131,58 @@ const Boxes = () => {
       const positionX =
         side === "width" ? newBox.params.length : newBox.params.width;
 
+      const flapWidth = sideWidth - 0.5 * newBox.params.flapGap;
+      const flapHeight = 0.5 * newBox.params.width;
+
       const sidePlaneGeometry = new THREE.PlaneGeometry(
         sideWidth,
-        newBox.params.depth
+        newBox.params.depth,
+        Math.floor(5 * sideWidth),
+        Math.floor(0.2 * newBox.params.depth)
+      );
+      const flapPlaneGeometry = new THREE.PlaneGeometry(
+        flapWidth,
+        flapHeight,
+        Math.floor(5 * flapWidth),
+        Math.floor(0.2 * flapHeight)
       );
 
-      const sideGeometry = sidePlaneGeometry;
+      const sideGeometry = createSideGeometry(
+        sidePlaneGeometry,
+        newBox.params,
+        [sideWidth, newBox.params.depth],
+        [true, true, true, true],
+        false
+      );
+      const topGeometry = createSideGeometry(
+        flapPlaneGeometry,
+        newBox.params,
+        [flapWidth, flapHeight],
+        [false, false, true, false],
+        true
+      );
+      const bottomGeometry = createSideGeometry(
+        flapPlaneGeometry,
+        newBox.params,
+        [flapWidth, flapHeight],
+        [true, false, false, false],
+        true
+      );
+
       sideGeometry.translate(-0.5 * sideWidth, 0.5 * newBox.params.depth, 0);
       newBoxesGroup[i].geometry = sideGeometry;
       newBoxesGroup[i].material = boxMaterial.clone();
 
-      const flapWidth = sideWidth - 0.5 * newBox.params.flapGap;
-      const flapHeight = 0.5 * newBox.params.width;
-      const flapPlaneGeometry = new THREE.PlaneGeometry(flapWidth, flapHeight);
-
       const flapTop = boxMesh.clone();
       flapTop.name = `top-${side}`;
-      const topGeometry = flapPlaneGeometry.clone();
       topGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
       flapTop.geometry = topGeometry;
       flapTop.material = boxMaterial.clone();
-      flapTop.position.y = box.params.depth;
+      flapTop.position.y = newBox.params.depth;
       flapTop.position.x = 0;
 
       const flapBottom = boxMesh.clone();
       flapBottom.name = `bottom-${side}`;
-      const bottomGeometry = flapPlaneGeometry.clone();
       bottomGeometry.translate(-0.5 * flapWidth, 0.5 * flapHeight, 0);
       flapBottom.geometry = bottomGeometry;
       flapBottom.material = boxMaterial.clone();
@@ -196,14 +208,13 @@ const Boxes = () => {
 
   useLayoutEffect(() => {
     createBoxElements();
-  }, []);
+  }, [initialSize]);
 
   useEffect(() => {
     gsap
       .timeline({
-        onUpdate: updateSceneScroll,
+        onUpdate: updatePanelTransform,
       })
-
       .to(
         angle.flapAngles.backHalf.length,
         {
@@ -235,7 +246,7 @@ const Boxes = () => {
 
   return (
     boxesGroup.length > 0 && (
-      <mesh position={[-(box.params.length + box.params.width) * 0.5, 0, 0]}>
+      <mesh position={[-(initialSize.length + initialSize.width) * 0.5, 0, 0]}>
         <primitive object={boxesGroup[0]} />
       </mesh>
     )
@@ -244,6 +255,17 @@ const Boxes = () => {
 
 const PreviewBox = ({ initialSize }) => {
   const orbitControlRef = useRef(null);
+  const { camera } = useThree();
+
+  useEffect(() => {
+    if (initialSize) {
+      camera.position.set(
+        0,
+        initialSize.depth * 2,
+        initialSize.width + initialSize.length + initialSize.depth
+      );
+    }
+  }, [initialSize]);
   useFrame(() => {
     if (orbitControlRef.current) {
       orbitControlRef.current.update();
@@ -260,7 +282,11 @@ const PreviewBox = ({ initialSize }) => {
       />
       <PerspectiveCamera
         makeDefault
-        position={[-20, 60, 100]}
+        position={[
+          0,
+          initialSize.depth * 2,
+          initialSize.width + initialSize.length + initialSize.depth,
+        ]}
         fov={45}
         far={1000}
         near={10}
@@ -271,7 +297,7 @@ const PreviewBox = ({ initialSize }) => {
           <pointLight color="#fff" position={[-30, 300, 0]} intensity={0.5} />
         </group>
       </ambientLight>
-      <Boxes />
+      <Boxes initialSize={initialSize} />
     </>
   );
 };

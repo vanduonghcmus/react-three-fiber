@@ -1,14 +1,14 @@
-import { Button, Col, Form, InputNumber, Row, Select } from "antd";
+import { Button, Col, Form, InputNumber, Row } from "antd";
 import React from "react";
 
 const MATERIAL_OPTIONS = [
   {
-    value: "jack",
-    label: "Jack",
+    value: "Cardboard",
+    label: "",
   },
   {
-    value: "lucy",
-    label: "Lucy",
+    value: "#EAEAEA",
+    label: "Paper",
   },
   {
     value: "disabled",
@@ -47,6 +47,10 @@ const FormControl = ({ initialValues = {}, onSubmit }) => {
           </Form.Item>
         </Col>
       </Row>
+
+      <Form.Item label="Custom Thickness" name="thickness">
+        <InputNumber style={{ width: "100%" }} min={0.2} max={9} />
+      </Form.Item>
       <Form.Item wrapperCol={{ span: 24 }}>
         <Button type="primary" htmlType="submit">
           Apply

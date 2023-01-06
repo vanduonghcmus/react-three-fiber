@@ -13,7 +13,6 @@ import editSize from "./assets/image/edit-size.png";
 import animation from "./assets/image/animation.png";
 import preview from "./assets/image/preview.png";
 
-
 const CM_UNIT = 1;
 
 const initialValues = {
@@ -21,6 +20,8 @@ const initialValues = {
   length: calculateSizeByUnit(80, CM_UNIT),
   depth: calculateSizeByUnit(45, CM_UNIT),
   flapGap: 1,
+  thickness: 0.2,
+  fluteFreq: 5,
 };
 
 function App() {
@@ -46,7 +47,7 @@ function App() {
       key: 2,
       label: <Image preview={false} width={100} height={100} src={animation} />,
       children: (
-        <Canvas>
+        <Canvas dpr={[window.devicePixelRatio, 2]}>
           <Suspense fallback={null}>
             <Canvas3D initialSize={boxSize} />
           </Suspense>
@@ -57,7 +58,7 @@ function App() {
       key: 3,
       label: <Image preview={false} width={100} height={100} src={preview} />,
       children: (
-        <Canvas>
+        <Canvas dpr={[window.devicePixelRatio, 2]}>
           <Suspense fallback={null}>
             <PreviewBox initialSize={boxSize} />
           </Suspense>
@@ -94,12 +95,7 @@ function App() {
           </Col>
           <Col span={10}>
             <FormControl
-              initialValues={{
-                width: 27,
-                length: 80,
-                depth: 45,
-                thickness: 0.1,
-              }}
+              initialValues={initialValues}
               onSubmit={handleSubmit}
             />
           </Col>
