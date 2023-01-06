@@ -20,7 +20,7 @@ const initialValues = {
   length: calculateSizeByUnit(80, CM_UNIT),
   depth: calculateSizeByUnit(45, CM_UNIT),
   flapGap: 1,
-  thickness: 0.2,
+  thickness: 0.6,
   fluteFreq: 5,
 };
 

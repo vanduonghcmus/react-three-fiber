@@ -219,7 +219,7 @@ const Boxes = ({ initialSize }) => {
         angle.flapAngles.backHalf.length,
         {
           duration: 1,
-          top: angleToRadians(-90),
+          top: angleToRadians(0),
           ease: "power1.out",
         },
         0
@@ -228,7 +228,7 @@ const Boxes = ({ initialSize }) => {
         angle.flapAngles.frontHalf.length,
         {
           duration: 1,
-          top: angleToRadians(-90),
+          top: angleToRadians(0),
           ease: "back.in(4)",
         },
         1
@@ -237,7 +237,7 @@ const Boxes = ({ initialSize }) => {
         [angle.flapAngles.backHalf.width, angle.flapAngles.frontHalf.width],
         {
           duration: 1,
-          top: angleToRadians(-90),
+          top: angleToRadians(30),
           ease: "power1.out",
         },
         1
