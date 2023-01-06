@@ -49,7 +49,7 @@ const FormControl = ({ initialValues = {}, onSubmit }) => {
       </Row>
 
       <Form.Item label="Custom Thickness" name="thickness">
-        <InputNumber style={{ width: "100%" }} min={0.2}  />
+        <InputNumber style={{ width: "100%" }} min={0.2} max={1} />
       </Form.Item>
       <Form.Item wrapperCol={{ span: 24 }}>
         <Button type="primary" htmlType="submit">

@@ -293,8 +293,8 @@ const PreviewBox = ({ initialSize }) => {
       />
       <ambientLight args={["#ffffff", 1]}>
         <group>
-          <pointLight color="#fff" position={[100, 0, 50]} intensity={0.7} />
-          <pointLight color="#fff" position={[-30, 300, 0]} intensity={0.5} />
+          <pointLight color="#fff" position={[100, 0, 50]} intensity={0.5} />
+          <pointLight color="#fff" position={[-30, 300, 0]} intensity={.7} />
         </group>
       </ambientLight>
       <Boxes initialSize={initialSize} />

@@ -72,7 +72,7 @@ function App() {
     newBoxSize.length = calculateSizeByUnit(values.length, 1);
     newBoxSize.width = calculateSizeByUnit(values.width, 1);
     newBoxSize.depth = calculateSizeByUnit(values.depth, 1);
-
+    newBoxSize.thickness=values.thickness
     setBoxSize(newBoxSize);
   };
   return (
