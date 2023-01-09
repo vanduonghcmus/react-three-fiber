@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Line from "../common/Line/Line";
 import * as THREE from "three";
 import { MOCK_DATA } from "../../utils/constant";
+import { polarToCartesian } from "../../utils";
 
 function BleedsLine({ color = "#65C42F" }) {
   const [geometry, setGeometry] = useState(null);
@@ -39,27 +40,37 @@ function CutLine({ color = "#5152A8" }) {
 
   useEffect(() => {
     const path = new THREE.Path();
-    // MOCK_DATA.traditional.cuts.forEach((bleed) => {
-    //   if (bleed.mtd === "M") {
-    //     path.moveTo(bleed.x, bleed.y);
-    //   }
-    //   if (bleed.mtd === "L") {
-    //     path.lineTo(bleed.x, bleed.y);
-    //   }
+    MOCK_DATA.traditional.cuts.forEach((bleed) => {
+      if (bleed.mtd === "M") {
+        path.moveTo(bleed.x, bleed.y);
+      }
+      if (bleed.mtd === "L") {
+        path.lineTo(bleed.x, bleed.y);
+      }
 
-    //   if (bleed.mtd === "A") {
-    //     path.bezierCurveTo(bleed.x, bleed.y, bleed.rx, bleed.ry);
-    //   }
+      if (bleed.mtd === "A") {
+        path.absellipse(
+          bleed.x,
+          bleed.y,
+          bleed.rx,
+          bleed.ry,
+          0,
+          0,
+          true,
+          0,
+        );
+      }
 
-    //   if (bleed.mtd === "Z") {
-    //     path.closePath(bleed.x, bleed.y);
-    //   }
-    // });
-    path.lineTo(0, 800);
-    path.quadraticCurveTo(0, 1000, 200, 1000);
-    path.lineTo(1000, 1000);
+      if (bleed.mtd === "Z") {
+        path.closePath(bleed.x, bleed.y);
+      }
+    });
+    // path.lineTo(0, 800);
+    // path.quadraticCurveTo(0, 1000, 200, 1000);
+    // path.lineTo(1000, 1000);
 
     const points = path.getPoints();
+    console.log("points", points);
     const newGeometry = new THREE.BufferGeometry().setFromPoints(points);
     setGeometry(newGeometry);
   }, []);
