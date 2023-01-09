@@ -12,6 +12,7 @@ import PreviewBox from "./components/Preview/PreviewBox";
 import editSize from "./assets/image/edit-size.png";
 import animation from "./assets/image/animation.png";
 import preview from "./assets/image/preview.png";
+import Shape2D from "./components/Shape2D/Shape2D";
 
 const CM_UNIT = 1;
 
@@ -65,6 +66,18 @@ function App() {
         </Canvas>
       ),
     },
+
+    {
+      key: 4,
+      label: "Three",
+      children: (
+        <Canvas dpr={[window.devicePixelRatio, 2]}>
+          <Suspense fallback={null}>
+            <Shape2D initialSize={boxSize} />
+          </Suspense>
+        </Canvas>
+      ),
+    },
   ];
 
   const handleSubmit = (values) => {
@@ -72,7 +85,7 @@ function App() {
     newBoxSize.length = calculateSizeByUnit(values.length, 1);
     newBoxSize.width = calculateSizeByUnit(values.width, 1);
     newBoxSize.depth = calculateSizeByUnit(values.depth, 1);
-    newBoxSize.thickness=values.thickness
+    newBoxSize.thickness = values.thickness;
     setBoxSize(newBoxSize);
   };
   return (
@@ -101,6 +114,18 @@ function App() {
           </Col>
         </Row>
       </Content>
+      <svg viewBox="100 -1400 1100 4000" version="1.1">
+        <g stroke="navy" stroke-width="3" fill="none">
+          <path
+            data-v-9a9e6e08=""
+            stroke-width="2.1830029867215517"
+            stroke="#000180"
+            fill="none"
+            d=" M45,110  A1.5,1.5 0 0,0 46.5,108.5  L46.5,108  L46.5,108  L46.5,0  L476,0  L476,107  A3,3 0 0,0 476.1715728752538,108  L476.1715728752538,108  A3,3 0 0,0 479,110  A3,3 0 0,0 482,107  L482,0  L690,0  L690,107  A3,3 0 0,0 693,110  A3,3 0 0,0 695.8284271247462,108  L695.8284271247462,108  A3,3 0 0,0 696,107  L696,0  L1124,0  L1124,107  A3,3 0 0,0 1124.1715728752538,108  L1124.1715728752538,108  A3,3 0 0,0 1127,110  A3,3 0 0,0 1130,107  L1130,0  L1338.5,0  L1338.5,108.5  A1.5,1.5 0 0,0 1340,110  L1340,384  A1.5,1.5 0 0,0 1338.5,385.5  L1338.5,494  L1130,494  L1130,387  A3,3 0 0,0 1127,384  A3,3 0 0,0 1124.1715728752538,386  L1124.1715728752538,386  A3,3 0 0,0 1124,387  L1124,494  L696,494  L696,387  A3,3 0 0,0 695.8284271247462,386  L695.8284271247462,386  A3,3 0 0,0 693,384  A3,3 0 0,0 690,387  L690,494  L482,494  L482,387  A3,3 0 0,0 479,384  A3,3 0 0,0 476.1715728752538,386  L476.1715728752538,386  A3,3 0 0,0 476,387  L476,494  L46.5,494  L46.5,386  L46.5,386  L46.5,385.5  A1.5,1.5 0 0,0 45,384  L0,371.9422863405995  L0,122.05771365940052  L45,110  Z "
+            class="svg-cutting"
+          ></path>
+        </g>
+      </svg>
     </Layout>
   );
 }

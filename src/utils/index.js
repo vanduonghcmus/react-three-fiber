@@ -62,3 +62,7 @@ export function createSideGeometry(
 
   return mergedGeometry;
 }
+
+export function createExtrudeGeometry(baseGeometry,params,size,hasMiddleLayer){
+  const geometriesToMerge = [];
+}
