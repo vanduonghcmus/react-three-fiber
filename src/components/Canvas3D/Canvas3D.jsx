@@ -74,6 +74,7 @@ const Boxes = ({ initialSize }) => {
       },
     },
   }));
+  
   function updatePanelTransform() {
     boxesGroup.forEach((b, idx) => {
       b.rotation.y = angle.v;

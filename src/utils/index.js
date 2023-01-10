@@ -1,4 +1,6 @@
 import { mergeBufferGeometries } from "three/examples/jsm/utils/BufferGeometryUtils.js";
+import * as THREE from "three";
+import { PATH_TYPE } from "./constant";
 
 export const calculateSizeByUnit = (value = 0, unit = 1) => {
   return unit * value;
@@ -15,28 +17,28 @@ export const polarToCartesian = (centerX, centerY, radius, angleInDegrees) => {
   };
 };
 
-export const describeArc = (x, y, radius, startAngle, endAngle) => {
-  var start = polarToCartesian(x, y, radius, endAngle);
-  var end = polarToCartesian(x, y, radius, startAngle);
+// export const describeArc = (x, y, radius, startAngle, endAngle) => {
+//   var start = polarToCartesian(x, y, radius, endAngle);
+//   var end = polarToCartesian(x, y, radius, startAngle);
 
-  var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
+//   var largeArcFlag = endAngle - startAngle <= 180 ? "0" : "1";
 
-  var d = [
-    "M",
-    start.x,
-    start.y,
-    "A",
-    radius,
-    radius,
-    0,
-    largeArcFlag,
-    0,
-    end.x,
-    end.y,
-  ].join(" ");
+//   var d = [
+//     "M",
+//     start.x,
+//     start.y,
+//     "A",
+//     radius,
+//     radius,
+//     0,
+//     largeArcFlag,
+//     0,
+//     end.x,
+//     end.y,
+//   ].join(" ");
 
-  return d;
-};
+//   return d;
+// };
 
 export function createSideGeometry(
   baseGeometry,
@@ -94,3 +96,66 @@ export function createSideGeometry(
 
   return mergedGeometry;
 }
+
+export const generatePathGeometry = (data = []) => {
+  const path = new THREE.Path();
+
+  data.forEach((item) => {
+    switch (item?.mtd) {
+      case PATH_TYPE["m"]:
+        path.moveTo(item.x, item.y);
+        break;
+      case PATH_TYPE["l"]:
+        path.lineTo(item.x, item.y);
+        break;
+
+      case PATH_TYPE["a"]:
+        path.absarc(
+          item.x,
+          item.y,
+          angleToRadians(item.rx),
+          angleToRadians(item.sAng),
+          angleToRadians(item.eAng)
+        );
+        break;
+
+      default:
+        path.closePath();
+        break;
+    }
+  });
+  const points = path.getPoints();
+  const geometry = new THREE.BufferGeometry().setFromPoints(points);
+  return geometry;
+};
+
+export const generateShapeGeometry = (data = []) => {
+  const shape = new THREE.Shape();
+
+  data.forEach((item) => {
+    switch (item?.mtd) {
+      case PATH_TYPE["m"]:
+        shape.moveTo(item.x, item.y);
+        break;
+      case PATH_TYPE["l"]:
+        shape.lineTo(item.x, item.y);
+        break;
+
+      case PATH_TYPE["a"]:
+        shape.absarc(
+          item.x,
+          item.y,
+          angleToRadians(item.rx),
+          angleToRadians(item.sAng),
+          angleToRadians(item.eAng)
+        );
+        break;
+
+      default:
+        shape.closePath();
+        break;
+    }
+  });
+  const geometry = new THREE.ShapeGeometry(shape);
+  return geometry;
+};

@@ -1,29 +1,14 @@
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import React, { useEffect, useRef, useState } from "react";
-import Line from "../common/Line/Line";
-import * as THREE from "three";
+import React, { useEffect, useState } from "react";
+import { generatePathGeometry } from "../../utils";
 import { MOCK_DATA } from "../../utils/constant";
-import { polarToCartesian } from "../../utils";
+import Line from "../common/Line/Line";
 
 function BleedsLine({ color = "#65C42F" }) {
   const [geometry, setGeometry] = useState(null);
 
   useEffect(() => {
-    const path = new THREE.Path();
-    MOCK_DATA.traditional.bleeds.forEach((bleed) => {
-      if (bleed.mtd === "M") {
-        path.moveTo(bleed.x, bleed.y);
-      }
-      if (bleed.mtd === "L") {
-        path.lineTo(bleed.x, bleed.y);
-      }
-
-      if (bleed.mtd === "Z") {
-        path.closePath();
-      }
-    });
-    const points = path.getPoints();
-    const newGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const newGeometry = generatePathGeometry(MOCK_DATA.traditional.bleeds);
     setGeometry(newGeometry);
   }, []);
 
@@ -39,39 +24,7 @@ function CutLine({ color = "#5152A8" }) {
   const [geometry, setGeometry] = useState(null);
 
   useEffect(() => {
-    const path = new THREE.Path();
-    MOCK_DATA.traditional.cuts.forEach((bleed) => {
-      if (bleed.mtd === "M") {
-        path.moveTo(bleed.x, bleed.y);
-      }
-      if (bleed.mtd === "L") {
-        path.lineTo(bleed.x, bleed.y);
-      }
-
-      if (bleed.mtd === "A") {
-        path.absellipse(
-          bleed.x,
-          bleed.y,
-          bleed.rx,
-          bleed.ry,
-          0,
-          0,
-          true,
-          0,
-        );
-      }
-
-      if (bleed.mtd === "Z") {
-        path.closePath(bleed.x, bleed.y);
-      }
-    });
-    // path.lineTo(0, 800);
-    // path.quadraticCurveTo(0, 1000, 200, 1000);
-    // path.lineTo(1000, 1000);
-
-    const points = path.getPoints();
-    console.log("points", points);
-    const newGeometry = new THREE.BufferGeometry().setFromPoints(points);
+    const newGeometry = generatePathGeometry(MOCK_DATA.traditional.cuts);
     setGeometry(newGeometry);
   }, []);
 
@@ -125,6 +78,15 @@ const Shape2D = ({ initialSize }) => {
         ]}
       >
         <CutLine />
+        {MOCK_DATA.traditional.folds.map((fold) => {
+          return (
+            <Line
+              color="#ff0000"
+              start={[fold.x1, fold.y1, 0]}
+              end={[fold.x2, fold.y2, 0]}
+            />
+          );
+        })}
       </group>
     </>
   );
