@@ -32,6 +32,15 @@ export const PATH_TYPE = Object.freeze({
 });
 
 export const MOCK_DATA = {
+  size: {
+    L: 430,
+    W: 210,
+    H: 270,
+    D: 3,
+    id: 0,
+    ed: 0,
+    like: null,
+  },
   traditional: {
     faces: [
       {
@@ -54,7 +63,7 @@ export const MOCK_DATA = {
             ry: 1.5,
             sAng: 0,
             eAng: 0,
-            dir:0,
+            dir: 0,
           },
           {
             mtd: "L",
@@ -1432,141 +1441,139 @@ export const MOCK_DATA = {
         z: 3.141592653589793,
       },
     },
-    animation: {
-      animations: [
-        [
-          {
-            name: "H_HL",
-            rotate: -90.2,
-            vector: {
-              x: 0,
-              y: -274,
-              z: 0,
-            },
-            action: "rotate",
+    animations: [
+      [
+        {
+          name: "H_HL",
+          rotate: -90.2,
+          vector: {
+            x: 0,
+            y: -274,
+            z: 0,
           },
-          {
-            name: "H_FR",
-            rotate: -89.8,
-            vector: {
-              x: 0,
-              y: 274,
-              z: 0,
-            },
-            action: "rotate",
+          action: "rotate",
+        },
+        {
+          name: "H_FR",
+          rotate: -89.8,
+          vector: {
+            x: 0,
+            y: 274,
+            z: 0,
           },
-          {
-            name: "FR_F",
-            rotate: -89.8,
-            vector: {
-              x: 0,
-              y: 274,
-              z: 0,
-            },
-            action: "rotate",
+          action: "rotate",
+        },
+        {
+          name: "FR_F",
+          rotate: -89.8,
+          vector: {
+            x: 0,
+            y: 274,
+            z: 0,
           },
-        ],
-        [
-          {
-            name: "F_FL",
-            rotate: -89.8,
-            vector: {
-              x: 0,
-              y: 274,
-              z: 0,
-            },
-            action: "rotate",
-          },
-        ],
-        [
-          {
-            name: "FR_FRB",
-            rotate: -90.2,
-            vector: {
-              x: -214,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-          {
-            name: "FL_FLB",
-            rotate: -90.2,
-            vector: {
-              x: -213,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-        ],
-        [
-          {
-            name: "H_HB",
-            rotate: -89.8,
-            vector: {
-              x: -429.6715728752538,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-          {
-            name: "F_FB",
-            rotate: -89.8,
-            vector: {
-              x: -428.3431457505076,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-        ],
-        [
-          {
-            name: "FR_FRT",
-            rotate: -90.2,
-            vector: {
-              x: 214,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-          {
-            name: "FL_FLT",
-            rotate: -90.2,
-            vector: {
-              x: 213,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-        ],
-        [
-          {
-            name: "H_HT",
-            rotate: -89.8,
-            vector: {
-              x: 429.6715728752538,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-          {
-            name: "F_FT",
-            rotate: -89.8,
-            vector: {
-              x: 428.3431457505076,
-              y: 0,
-              z: 0,
-            },
-            action: "rotate",
-          },
-        ],
+          action: "rotate",
+        },
       ],
-    },
+      [
+        {
+          name: "F_FL",
+          rotate: -89.8,
+          vector: {
+            x: 0,
+            y: 274,
+            z: 0,
+          },
+          action: "rotate",
+        },
+      ],
+      [
+        {
+          name: "FR_FRB",
+          rotate: -90.2,
+          vector: {
+            x: -214,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+        {
+          name: "FL_FLB",
+          rotate: -90.2,
+          vector: {
+            x: -213,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+      ],
+      [
+        {
+          name: "H_HB",
+          rotate: -89.8,
+          vector: {
+            x: -429.6715728752538,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+        {
+          name: "F_FB",
+          rotate: -89.8,
+          vector: {
+            x: -428.3431457505076,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+      ],
+      [
+        {
+          name: "FR_FRT",
+          rotate: -90.2,
+          vector: {
+            x: 214,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+        {
+          name: "FL_FLT",
+          rotate: -90.2,
+          vector: {
+            x: 213,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+      ],
+      [
+        {
+          name: "H_HT",
+          rotate: -89.8,
+          vector: {
+            x: 429.6715728752538,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+        {
+          name: "F_FT",
+          rotate: -89.8,
+          vector: {
+            x: 428.3431457505076,
+            y: 0,
+            z: 0,
+          },
+          action: "rotate",
+        },
+      ],
+    ],
   },
 };
