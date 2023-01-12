@@ -1,16 +1,16 @@
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
 import React, { useEffect, useState } from "react";
-import Line from "../components/common/Line/Line";
-import { MOCK_DATA } from "../utils/constant";
+import Line from "../common/Line/Line";
+import { MOCK_DATA } from "../../utils/constant";
 import * as THREE from "three";
-import { generateShapeGeometry, angleToRadians } from "../utils";
+import { generateShapeGeometry, angleToRadians } from "../../utils";
 import gsap from "gsap";
+import { useThree } from "@react-three/fiber";
 
 const Faces = () => {
   const [facesState, setFacesState] = useState([]);
   const [animations, setAnimations] = useState({ v: 0 });
   const [meshState, setMeshState] = useState([]);
-
   const {
     faces,
     folds,
@@ -18,82 +18,73 @@ const Faces = () => {
     animations: animationData,
   } = MOCK_DATA.traditional;
 
-  const setGeometryHierarchy = (mesh) => {
-    const newMesh = [...mesh];
-
-    for (let i = 0; i < newMesh.length; i++) {
-      if (i !== 0) {
-        console.log(newMesh[i]);
-        newMesh[i - 1].add(newMesh[i]);
-      }
-    }
-
-    console.log("newMesh", newMesh);
-
-    return newMesh;
-  };
-
-  // const convertAnimation = (animations = []) => {
-  //   const result = {};
-  //   if (animations.length > 0) {
-  //     animations.forEach((animation) => {
-  //       if (animation?.length > 0) {
-  //         animation.forEach((it) => {
-  //           result[it.name]=
-  //         });
-  //       }
-  //     });
-  //   }
-
-  //   return result;
-  // };
-
-  const updateShapeTransform = () => {
-    if (meshState.length > 0) {
-      meshState.forEach((mesh, idx) => {
-        if (idx === 4) {
-          mesh.rotateY(angleToRadians(animations.v));
-        }
-      });
-    }
-  };
-
   const createShapeElements = () => {
     const newMeshState = [];
-    const newMeshFolds = [];
-
+    const shapeGeometries = [];
     const meshMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x9c8d7b),
       side: THREE.DoubleSide,
       wireframe: true,
     });
-    faces.forEach((face, idx) => {
+    const mesh = new THREE.Mesh();
+    mesh.isObject3D = true;
+    mesh.material = meshMaterial;
+
+    faces.forEach((face) => {
       const shapeGeometry = generateShapeGeometry(face.dlist);
-      const mesh = new THREE.Mesh(shapeGeometry, meshMaterial);
-      mesh.isObject3D = true;
-      mesh.name = face.name;
+      shapeGeometry.name = face.name;
+      shapeGeometry.translate(
+        transform.position.x,
+        transform.position.y,
+        transform.position.z
+      );
 
-      if (transform) {
-        mesh.position.set(
-          transform.position.x,
-          transform.position.y,
-          transform.position.z
-        );
-
-        mesh.rotateX(transform.rotate.x);
-        mesh.rotateY(transform.rotate.y);
-        mesh.rotateZ(transform.rotate.z);
-      }
-      newMeshState.push(mesh);
-
-      if (idx !== 0) {
-        mesh.add(new THREE.Mesh());
-        console.log("mesh", mesh);
-      }
+      shapeGeometries.push(shapeGeometry);
     });
 
-    // const meshGroup = setGeometryHierarchy(newMeshState);
+    if (shapeGeometries.length > 0) {
+      folds.forEach((fold, idx) => {
+        const [firstName, secondName] = fold.name.split("_");
+        const mesh = new THREE.Mesh();
+        mesh.isObject3D = true;
+        const geometryByFirstNameIdx = shapeGeometries.findIndex(
+          (mesh) => mesh.name === firstName
+        );
+        const geometryBySecondNameIdx = shapeGeometries.findIndex(
+          (mesh) => mesh.name === secondName
+        );
+
+        const firstMesh = new THREE.Mesh(
+          shapeGeometries[geometryByFirstNameIdx],
+          meshMaterial
+        );
+        const secondMesh = new THREE.Mesh(
+          shapeGeometries[geometryBySecondNameIdx],
+          meshMaterial
+        );
+        mesh.add(secondMesh);
+        mesh.add(firstMesh);
+
+        if (transform) {
+          mesh.rotateX(transform.rotate.x);
+          mesh.rotateY(transform.rotate.y);
+          mesh.rotateZ(transform.rotate.z);
+        }
+
+        newMeshState.push(mesh);
+      });
+    }
+
+    console.log("faces", newMeshState);
     setMeshState(newMeshState);
+  };
+
+  const updateShapeTransform = () => {
+    meshState.forEach((mesh, idx) => {
+      if (idx === 0) {
+        mesh.rotation.y = animations.v;
+      }
+    });
   };
 
   useEffect(() => {
@@ -106,15 +97,21 @@ const Faces = () => {
         onUpdate: updateShapeTransform,
       })
       .to(animations, {
-        duration: 1.5,
-        v: angleToRadians(-90),
+        duration: 4,
+        v: angleToRadians(90),
         ease: "power1.out",
       });
   }, [meshState]);
 
   return (
     meshState.length > 0 && (
-      <group>
+      <group
+      // position={[
+      //   transform.position.x,
+      //   transform.position.y,
+      //   transform.position.z,
+      // ]}
+      >
         {meshState.map((mesh) => (
           <primitive key={mesh.uuid} object={mesh} />
         ))}
@@ -141,12 +138,8 @@ const Shape3D = () => {
         makeDefault
         fov={45}
         near={10}
-        far={(MOCK_DATA.traditional.totalX + MOCK_DATA.traditional.totalY) * 2}
-        position={[
-          0,
-          0,
-          (MOCK_DATA.traditional.totalX + MOCK_DATA.traditional.totalY) * 0.5,
-        ]}
+        far={10000}
+        position={[0, 0, 1000]}
       />
       <Faces />
     </>
