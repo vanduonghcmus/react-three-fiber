@@ -30,11 +30,10 @@ const Faces = () => {
 
   const groupMeshElements = (meshElements = []) => {
     const result = [];
+    const temp = [];
     meshElements.forEach((mesh, idx, arr) => {
       const foldLines = mesh.userData["foldlines"];
-
-      const meshExistIdx = result.findIndex((it) => it.name === mesh.name);
-      console.log("meshExistIdx", meshExistIdx);
+      const meshExistIdx = temp.findIndex((it) => it.name === mesh.name);
       if (foldLines.length > 0) {
         foldLines.forEach((foldLine) => {
           const meshName = foldLine.split("_")[1];
@@ -44,28 +43,23 @@ const Faces = () => {
             meshFound.material
           );
           newMesh.name = meshName;
-          if (meshFound) {
-            if (meshExistIdx > 0) {
-              result[meshExistIdx].add(newMesh);
-            } else {
-              mesh.add(newMesh);
-              result.push(mesh);
-              result.push(newMesh);
-            }
+          temp.push(newMesh);
+
+          if (meshExistIdx > 0) {
+            temp[meshExistIdx].add(newMesh);
+          } else {
+            mesh.add(newMesh);
           }
         });
       }
+      result.push(mesh);
+
+      if (meshExistIdx < 0) {
+        temp.push(mesh);
+      }
     });
 
-    // for (let i = 0; i < result.length; i++) {
-    //   if (i > 0) {
-    //     result[i - 1].add(
-    //       new THREE.Mesh(result[i].geometry, result[i].material)
-    //     );
-    //   }
-    // }
-
-    return result;
+    return temp;
   };
 
   const createMeshElement = (geometry) => {
@@ -108,7 +102,7 @@ const Faces = () => {
     const groupMeshState = groupMeshElements(newMeshState);
     console.log("groupMeshState", groupMeshState);
     setMeshState(newMeshState);
-    setMeshGroups(groupMeshState);
+    setMeshGroups(groupMeshState[0]);
   };
 
   const updateShapeTransform = () => {
