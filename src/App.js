@@ -13,7 +13,7 @@ import editSize from "./assets/image/edit-size.png";
 import animation from "./assets/image/animation.png";
 import preview from "./assets/image/preview.png";
 import Shape2D from "./components/Shape2D/Shape2D";
-import Shape3D from "./Shape3D/Shape3D";
+import Shape3D from "./components/Shape3D/Shape3D";
 
 const CM_UNIT = 1;
 
