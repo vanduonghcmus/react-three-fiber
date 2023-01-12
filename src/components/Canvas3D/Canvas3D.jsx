@@ -212,6 +212,8 @@ const Boxes = ({ initialSize }) => {
         newBoxesGroup[i].position.y = -0.5 * newBox.params.depth;
       }
     }
+
+    console.log('newBoxesGroup',newBoxesGroup);
     setBoxesGroup(newBoxesGroup);
   };
 

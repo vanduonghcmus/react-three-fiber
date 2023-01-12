@@ -131,8 +131,12 @@ export const generatePathGeometry = (data = []) => {
 
 export const generateShapeGeometry = (data = []) => {
   const shape = new THREE.Shape();
+  const foldlines = [];
 
   data.forEach((item) => {
+    if (item.foldline) {
+      foldlines.push(item.foldline);
+    }
     switch (item?.mtd) {
       case PATH_TYPE["m"]:
         shape.moveTo(item.x, item.y);
@@ -157,5 +161,6 @@ export const generateShapeGeometry = (data = []) => {
     }
   });
   const geometry = new THREE.ShapeGeometry(shape);
+  geometry.userData["foldlines"] = foldlines;
   return geometry;
 };

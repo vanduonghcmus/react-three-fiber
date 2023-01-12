@@ -18,7 +18,20 @@ const Faces = () => {
     animations: animationData,
   } = MOCK_DATA.traditional;
 
-  const setGeometryHierarchy = () => {};
+  const setGeometryHierarchy = (mesh) => {
+    const newMesh = [...mesh];
+
+    for (let i = 0; i < newMesh.length; i++) {
+      if (i !== 0) {
+        console.log(newMesh[i]);
+        newMesh[i - 1].add(newMesh[i]);
+      }
+    }
+
+    console.log("newMesh", newMesh);
+
+    return newMesh;
+  };
 
   // const convertAnimation = (animations = []) => {
   //   const result = {};
@@ -47,17 +60,18 @@ const Faces = () => {
 
   const createShapeElements = () => {
     const newMeshState = [];
+    const newMeshFolds = [];
+
     const meshMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x9c8d7b),
       side: THREE.DoubleSide,
       wireframe: true,
     });
     faces.forEach((face, idx) => {
-      const plane = generateShapeGeometry(face.dlist);
-      const mesh = new THREE.Mesh(plane, meshMaterial);
-
+      const shapeGeometry = generateShapeGeometry(face.dlist);
+      const mesh = new THREE.Mesh(shapeGeometry, meshMaterial);
+      mesh.isObject3D = true;
       mesh.name = face.name;
-      newMeshState.push(mesh);
 
       if (transform) {
         mesh.position.set(
@@ -70,7 +84,15 @@ const Faces = () => {
         mesh.rotateY(transform.rotate.y);
         mesh.rotateZ(transform.rotate.z);
       }
+      newMeshState.push(mesh);
+
+      if (idx !== 0) {
+        mesh.add(new THREE.Mesh());
+        console.log("mesh", mesh);
+      }
     });
+
+    // const meshGroup = setGeometryHierarchy(newMeshState);
     setMeshState(newMeshState);
   };
 
@@ -93,7 +115,6 @@ const Faces = () => {
   return (
     meshState.length > 0 && (
       <group>
-       
         {meshState.map((mesh) => (
           <primitive key={mesh.uuid} object={mesh} />
         ))}
