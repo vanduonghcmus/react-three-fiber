@@ -23,11 +23,17 @@ const Faces = () => {
     if (meshGroups.length > 0) {
       meshGroups.forEach((mesh, idx) => {
         if (idx !== 0) {
-          // console.log('mesh',mesh);
-          mesh.rotation.y = animations.v;
-          // mesh.position.x = 479;
-          // mesh.position.z = -479;
+          mesh.rotation.y = -animations.v
         }
+        mesh.children.forEach((meshChid) => {
+          if (meshChid.children.length === 0) {
+            if (meshChid.name.includes("T")) {
+              meshChid.rotation.x = animations.v;
+            } else {
+              meshChid.rotation.x = animations.v;
+            }
+          }
+        });
       });
     }
   };
@@ -52,7 +58,8 @@ const Faces = () => {
             );
             newMesh.name = meshName;
             if (meshName.includes("T")) {
-              newMesh.position.y = -userData.h;
+              newMesh.rotation.x = angleToRadians(0);
+              newMesh.position.y = animations.v;
             }
             if (meshName.includes("B")) {
               newMesh.position.y = userParentData.h;
@@ -136,7 +143,7 @@ const Faces = () => {
         onUpdate: updateShapeTransform,
       })
       .to(animations, {
-        duration: 3,
+        duration: 5,
         v: angleToRadians(-90),
         ease: "power1.out",
       });
