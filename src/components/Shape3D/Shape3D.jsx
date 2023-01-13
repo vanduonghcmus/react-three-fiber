@@ -1,11 +1,10 @@
 import { OrbitControls, PerspectiveCamera } from "@react-three/drei";
-import React, { useEffect, useState } from "react";
-import Line from "../common/Line/Line";
-import { MOCK_DATA } from "../../utils/constant";
-import * as THREE from "three";
-import { generateShapeGeometry, angleToRadians } from "../../utils";
 import gsap from "gsap";
-import { useThree } from "@react-three/fiber";
+import React, { useEffect, useState } from "react";
+import * as THREE from "three";
+import { angleToRadians, generateShapeGeometry } from "../../utils";
+import { MOCK_DATA } from "../../utils/constant";
+import Line from "../common/Line/Line";
 
 const Faces = () => {
   const [facesState, setFacesState] = useState([]);
@@ -20,49 +19,83 @@ const Faces = () => {
     animations: animationData,
   } = MOCK_DATA.traditional;
 
-  //  foldLines.forEach((foldLine) => {
-  //         const meshName = foldLine.split("_")[1];
-  //         const meshFound = arr.find((it) => it.name === meshName);
-  //         if (meshFound) {
-  //           mesh.add(new THREE.Mesh(meshFound.geometry, meshFound.material));
-  //         }
-  //       });
+  const updateShapeTransform = () => {
+    if (meshGroups.length > 0) {
+      meshGroups.forEach((mesh, idx) => {
+        if (idx !== 0) {
+          // console.log('mesh',mesh);
+          // mesh.rotation.y = animations.v;
+          // mesh.position.x = 479;
+          // mesh.position.z = -479;
+        }
+      });
+    }
+  };
 
   const groupMeshElements = (meshElements = []) => {
     const result = [];
-    const temp = [];
     meshElements.forEach((mesh, idx, arr) => {
       const foldLines = mesh.userData["foldlines"];
-      const meshExistIdx = temp.findIndex((it) => it.name === mesh.name);
+      const userParentData = mesh.userData;
+
       if (foldLines.length > 0) {
         foldLines.forEach((foldLine) => {
           const meshName = foldLine.split("_")[1];
+          const foldLineAxis = folds.find((fold) => fold.name === foldLine);
           const meshFound = arr.find((it) => it.name === meshName);
-          const newMesh = new THREE.Mesh(
-            meshFound.geometry,
-            meshFound.material
-          );
-          newMesh.name = meshName;
-          temp.push(newMesh);
+          const userData = meshFound.userData;
 
-          if (meshExistIdx > 0) {
-            temp[meshExistIdx].add(newMesh);
-          } else {
+          if (meshFound && foldLineAxis) {
+            const newMesh = new THREE.Mesh(
+              meshFound.geometry,
+              meshFound.material
+            );
+            newMesh.name = meshName;
+            if (meshName.includes("T")) {
+              newMesh.position.set(0, -userData.h, 0);
+            }
+            if (meshName.includes("B")) {
+              newMesh.position.set(0, userParentData.h, 0);
+            }
+
+            if (meshName.includes("L")) {
+              newMesh.position.set(-userData.w, 0, 0);
+            }
+
             mesh.add(newMesh);
           }
         });
-      }
-      result.push(mesh);
-
-      if (meshExistIdx < 0) {
-        temp.push(mesh);
+        result.push(mesh);
       }
     });
 
-    return temp;
+    let meshElementChild = result[0]?.children;
+    for (let i = 0; i < result.length; i++) {
+      const meshElement = result[i];
+      if (i !== 0) {
+        const meshElementExistIdx = meshElementChild.findIndex(
+          (value) => value.name === meshElement.name
+        );
+        if (meshElementExistIdx >= 0) {
+          result[i - 1].remove(result[i - 1].children[meshElementExistIdx]);
+          result[i - 1].add(meshElement);
+          const userDataPrevious = result[i - 1].userData;
+          meshElement.position.set(userDataPrevious.w, 0, 0);
+          meshElementChild = meshElement.children;
+        }
+      } else {
+        // if (transform) {
+        //   meshElement.rotateX(transform.rotate.x);
+        //   meshElement.rotateY(transform.rotate.y);
+        //   meshElement.rotateZ(transform.rotate.z);
+        // }
+      }
+    }
+
+    return result;
   };
 
-  const createMeshElement = (geometry) => {
+  const createMeshElement = (geometry, face) => {
     const meshMaterial = new THREE.MeshStandardMaterial({
       color: new THREE.Color(0x9c8d7b),
       side: THREE.DoubleSide,
@@ -70,47 +103,34 @@ const Faces = () => {
     });
     const mesh = new THREE.Mesh(geometry, meshMaterial);
     mesh.isObject3D = true;
-    mesh.userData["foldlines"] = geometry.userData["foldlines"];
-
+    const userData = {
+      foldlines: geometry.userData["foldlines"],
+      w: face.w,
+      h: face.h,
+    };
+    mesh.userData = { ...userData };
     return mesh;
   };
 
   const createShapeElements = () => {
     const newMeshState = [];
-    const shapeGeometries = [];
-
     faces.forEach((face) => {
       const shapeGeometry = generateShapeGeometry(face.dlist);
-      shapeGeometries.push(shapeGeometry);
-      const mesh = createMeshElement(shapeGeometry);
+      shapeGeometry.translate(-face.x, -face.y, 0);
+      const mesh = createMeshElement(shapeGeometry, face);
       mesh.name = face.name;
-
-      if (transform) {
-        mesh.rotateX(transform.rotate.x);
-        mesh.rotateY(transform.rotate.y);
-        mesh.rotateZ(transform.rotate.z);
-        mesh.position.set(
-          transform.position.x,
-          transform.position.y,
-          transform.position.z
-        );
-      }
-
+      folds.forEach((fold) => {
+        const meshNameByFold = fold.name.split("_")[1];
+        if (face.name === meshNameByFold) {
+          mesh.position.set(face.dlist[0].x, face.y, 0);
+        }
+      });
       newMeshState.push(mesh);
     });
 
     const groupMeshState = groupMeshElements(newMeshState);
-    console.log("groupMeshState", groupMeshState);
     setMeshState(newMeshState);
-    setMeshGroups(groupMeshState[0]);
-  };
-
-  const updateShapeTransform = () => {
-    meshState.forEach((mesh, idx) => {
-      if (idx === 1) {
-        mesh.rotation.y = animations.v;
-      }
-    });
+    setMeshGroups(groupMeshState);
   };
 
   useEffect(() => {
@@ -123,25 +143,15 @@ const Faces = () => {
         onUpdate: updateShapeTransform,
       })
       .to(animations, {
-        duration: 4,
-        v: angleToRadians(90),
+        duration: 3,
+        v: angleToRadians(-90),
         ease: "power1.out",
       });
-  }, [meshState]);
+  }, [meshGroups]);
 
   return (
     meshGroups.length > 0 && (
-      <group
-      // position={[
-      //   transform.position.x,
-      //   transform.position.y,
-      //   transform.position.z,
-      // ]}
-      >
-        {meshGroups.map((mesh) => (
-          <primitive key={mesh.uuid} object={mesh} />
-        ))}
-      </group>
+      <primitive key={meshGroups[0].uuid} object={meshGroups[0]} />
     )
   );
 };
