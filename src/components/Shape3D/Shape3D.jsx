@@ -24,7 +24,7 @@ const Faces = () => {
       meshGroups.forEach((mesh, idx) => {
         if (idx !== 0) {
           // console.log('mesh',mesh);
-          // mesh.rotation.y = animations.v;
+          mesh.rotation.y = animations.v;
           // mesh.position.x = 479;
           // mesh.position.z = -479;
         }
@@ -43,25 +43,24 @@ const Faces = () => {
           const meshName = foldLine.split("_")[1];
           const foldLineAxis = folds.find((fold) => fold.name === foldLine);
           const meshFound = arr.find((it) => it.name === meshName);
-          const userData = meshFound.userData;
 
           if (meshFound && foldLineAxis) {
+            const userData = meshFound.userData;
             const newMesh = new THREE.Mesh(
               meshFound.geometry,
               meshFound.material
             );
             newMesh.name = meshName;
             if (meshName.includes("T")) {
-              newMesh.position.set(0, -userData.h, 0);
+              newMesh.position.y = -userData.h;
             }
             if (meshName.includes("B")) {
-              newMesh.position.set(0, userParentData.h, 0);
+              newMesh.position.y = userParentData.h;
             }
 
-            if (meshName.includes("L")) {
-              newMesh.position.set(-userData.w, 0, 0);
+            if (meshName.includes("HL")) {
+              newMesh.position.x = -userData.w;
             }
-
             mesh.add(newMesh);
           }
         });
@@ -84,11 +83,11 @@ const Faces = () => {
           meshElementChild = meshElement.children;
         }
       } else {
-        // if (transform) {
-        //   meshElement.rotateX(transform.rotate.x);
-        //   meshElement.rotateY(transform.rotate.y);
-        //   meshElement.rotateZ(transform.rotate.z);
-        // }
+        if (transform) {
+          meshElement.rotateX(transform.rotate.x);
+          meshElement.rotateY(transform.rotate.y);
+          meshElement.rotateZ(transform.rotate.z);
+        }
       }
     }
 
@@ -119,12 +118,6 @@ const Faces = () => {
       shapeGeometry.translate(-face.x, -face.y, 0);
       const mesh = createMeshElement(shapeGeometry, face);
       mesh.name = face.name;
-      folds.forEach((fold) => {
-        const meshNameByFold = fold.name.split("_")[1];
-        if (face.name === meshNameByFold) {
-          mesh.position.set(face.dlist[0].x, face.y, 0);
-        }
-      });
       newMeshState.push(mesh);
     });
 
